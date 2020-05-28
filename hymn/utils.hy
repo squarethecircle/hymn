@@ -19,8 +19,7 @@
 (defclass SuppressContextManager [object]
   "context manager that suppress specified exceptions"
   (defn --init-- [self exceptions]
-    (when (any (genexpr ex [ex exceptions]
-                 (not (issubclass ex BaseException))))
+    (when (any (gfor ex exceptions (not (issubclass ex BaseException))))
       (raise
         (TypeError "must be a subclass of BaseException")))
       (setv self.exceptions (tuple exceptions)))
