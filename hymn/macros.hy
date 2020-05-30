@@ -5,6 +5,7 @@
 
 (import
   [hymn.utils [thread-first thread-last thread-bindings]])
+(import [hy [HySymbol HyList HyString]])
 
 ;;; lift tag macro, e.g. #^ + => (lift +)
 (deftag ^ [f]
@@ -37,6 +38,29 @@
            (>> ~monad (fn [~binding &optional [m-return (. ~monad unit)]]
                         ~mexpr))))))
   (reduce bind-action bindings expr))
+
+(defmacro applicative-do-monad [binding-forms expr]
+  "macro for sequencing monadic computations, a.k.a do notation in haskell"
+  (when (odd? (len binding-forms))
+    (macro-error None "do-monad binding forms must come in pairs"))
+  (setv iterator (iter binding-forms))
+  (setv bindings (-> (zip iterator iterator) list))
+  (setv binding-names (HyList (map (comp HySymbol first) bindings)))
+  (setv fn-expr `(fn ~binding-names ~expr))
+  (unless (len bindings)
+    (macro-error None "do-monad must have at least one binding form"))
+  (defn bind-action [mexpr binding-expr]
+    (setv [binding expr] binding-expr)
+    (if
+      (with-gensyms [ronad bit]
+        `(do
+           (setv ~ronad ~expr)
+           (setv ~bit ~mexpr)
+           (if (not (instance? Monad ~bit)) (setv ~bit ((. ~ronad unit) ~bit)))
+           ((. ~bit ap) ~ronad ~(HyString binding))))))
+  `(do (import [hymn.types.monad [Monad]])
+    ~(reduce bind-action bindings fn-expr))
+)
 
 (defmacro do-monad-return [binding-forms expr]
   "macro for sequencing monadic computations, with automatic return"

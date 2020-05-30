@@ -7,12 +7,27 @@
   [operator [itemgetter]]
   [hymn.types.monad [Monad]])
 
+(import [toolz [curry]])
+
 (defclass Reader [Monad]
   "the reader monad
 
   computations which read values from a shared environment"
+  (defn --init-- [self value &optional [deps #{}]] 
+    (setv self.value value)
+    (setv self.deps deps)
+  )
+
   (defn --repr-- [self]
     (.format "{}({})" (. (type self) --name--) self.value.--name--))
+
+  (defn ap [self f &optional [arg None]]
+    "the ap operation of :class:`Reader`"
+    (if arg 
+      ((type self) (fn [e] ((curry (.run self e)) #** {arg (.run f e)}))
+        :deps (| self.deps f.deps) )
+      ((type self) (fn [e] ((curry (.run self e)) (.run f e))) 
+        :deps (| self.deps f.deps) )))
 
   (defn bind [self f]
     "the bind operation of :class:`Reader`"
@@ -36,9 +51,10 @@
 (setv run Reader.run)
 (setv unit Reader.unit)
 
-(defn asks [f]
+(defn asks [f &optional [deps #{}]]
   "create a simple reader action from :code:`f`"
-  (Reader f))
+  (Reader f :deps deps))
+
 (setv reader asks)
 
 (setv ask (reader identity))
@@ -49,5 +65,5 @@
 
 (defn lookup [key]
   "create a lookup reader of :code:`key` in the environment"
-  (reader (itemgetter key)))
+  (reader (itemgetter key) :deps #{key}))
 (setv <- lookup)

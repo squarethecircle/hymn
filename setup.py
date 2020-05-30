@@ -42,6 +42,7 @@ setup(
         'https://bitbucket.org/pyx/hymn/get/%s.tar.bz2' % VERSION),
     install_requires=[
         'hy==0.17.0',
+        'toolz==0.10.0'
     ],
     extras_require={
         'dev': [

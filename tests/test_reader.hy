@@ -8,6 +8,7 @@
   [hymn.types.reader [reader-m asks reader ask local lookup <-]])
 
 (require hymn.operations)
+(require [hymn.macros [applicative-do-monad]])
 
 (setv env {'a 42 'b None 'c "hello"})
 
@@ -36,6 +37,20 @@
 (defn test-ask []
   "ask return the environment"
   (assert (is env (.run ask env))))
+
+(defn test-ap []
+  "ap works"
+  (setv pb (fn [e] (fn [a b] (- a b))))
+  (setv pure (reader pb))
+  (assert (= -1 (.run (.ap (.ap pure (<- "a")) (<- "b")) {"a" 2 "b" 3})))
+  (assert (= -1 (.run (.ap (.ap pure (<- "b") "b") (<- "a") "a") {"a" 2 "b" 3})))
+  (setv r (applicative-do-monad
+          [b (<- "a")
+           c (<- "b")]
+          (- c b)))
+  (assert (= 2 (len (. r deps))))
+  (assert (= 1 (.run r {"a" 2 "b" 3}))))
+
 
 (defn test-local []
   "local should run a computation in a possibly modified environment"
