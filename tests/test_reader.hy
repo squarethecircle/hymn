@@ -44,12 +44,17 @@
   (setv pure (reader pb))
   (assert (= -1 (.run (.ap (.ap pure (<- "a")) (<- "b")) {"a" 2 "b" 3})))
   (assert (= -1 (.run (.ap (.ap pure (<- "b") "b") (<- "a") "a") {"a" 2 "b" 3})))
-  (setv r (applicative-do-monad
-          [b (<- "a")
+  (setv r1 (applicative-do-monad
+          [baa-baa (<- "a")
            c (<- "b")]
-          (- c b)))
-  (assert (= 2 (len (. r deps))))
-  (assert (= 1 (.run r {"a" 2 "b" 3}))))
+          (- c baa-baa)))
+  (setv r2 (applicative-do-monad
+          [asdf r1]
+          (* asdf 20)))
+  (assert (= 2 (len (. r1 deps))))
+  (assert (= 1 (.run r1 {"a" 2 "b" 3})))
+  (assert (= 20 (.run r2 {"a" 2 "b" 3}))))
+
 
 
 (defn test-local []

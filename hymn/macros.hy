@@ -57,7 +57,7 @@
            (setv ~ronad ~expr)
            (setv ~bit ~mexpr)
            (if (not (instance? Monad ~bit)) (setv ~bit ((. ~ronad unit) ~bit)))
-           ((. ~bit ap) ~ronad ~(HyString binding))))))
+           ((. ~bit ap) ~ronad ~(HyString (mangle binding)))))))
   `(do (import [hymn.types.monad [Monad]])
     ~(reduce bind-action bindings fn-expr))
 )
